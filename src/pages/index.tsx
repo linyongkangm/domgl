@@ -1,15 +1,8 @@
-import yayJpg from '../assets/yay.jpg';
-
+import Stage from '@/component/Stage';
 export default function HomePage() {
   return (
     <div>
-      <h2>Yay! Welcome to umi!</h2>
-      <p>
-        <img src={yayJpg} width="388" />
-      </p>
-      <p>
-        To get started, edit <code>pages/index.tsx</code> and save to reload.
-      </p>
+      <Stage width={30} height={30} style={{ width: 500, height: 500 }}></Stage>
     </div>
   );
 }
