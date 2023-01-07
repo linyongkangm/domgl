@@ -40,25 +40,27 @@ export default function HomePage() {
       return;
     }
     const context = new WebglContext(stage);
-
     initShader(
       context,
       (gl, params) => {
         gl.Position = params.attribute.a_Position as Vec4;
       },
-      (gl) => {
-        gl.FragColor = [1, 0, 0, 1];
+      (gl, params) => {
+        gl.FragColor = params.uniform.u_FragColor as Vec4;
       }
     );
-    if (context.program) {
-      const location = context.getAttribLocation(context.program, 'a_Position');
-      context.vertexAttrib4f(location, 0, 0, 0, 1);
-
-      context.claerColor(0.0, 1.0, 0.0, 1.0);
-      context.clear(context.COLOR_BUFFER_BIT);
-
-      context.drawArrays(DrawArraysMode.POINTS, 0, 1);
+    if (!context.program) {
+      return;
     }
+
+    context.vertexAttrib4f(context.getAttribLocation(context.program, 'a_Position'), 0, 0, 0, 1);
+
+    context.uniform4f(context.getUniformLocation(context.program, 'u_FragColor'), 1, 1, 1, 1);
+
+    context.claerColor(0.0, 1.0, 0.0, 1.0);
+    context.clear(context.COLOR_BUFFER_BIT);
+
+    context.drawArrays(DrawArraysMode.POINTS, 0, 1);
   }, []);
   return (
     <div>

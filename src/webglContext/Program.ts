@@ -4,6 +4,7 @@ import {
   FragmentShaderExecutorPayload,
   VertexShaderExecutorParams,
   Vec,
+  FragmentShaderExecutorParams,
 } from './interface';
 import { Shader, VertexShader, FragmentShader } from './Shader';
 
@@ -46,17 +47,27 @@ export class Program {
   public execFragmentShader(draw: (payload: Program['willRasterizeFragmentPayload'][0]) => void) {
     this.willRasterizeFragmentPayload.forEach((fragment) => {
       const payload: FragmentShaderExecutorPayload = {};
-      this?.fragmentShader?.executor?.(payload, {});
+      this?.fragmentShader?.executor?.(payload, this.fragmentParams);
       fragment.fragmentShaderExecutorPayload = payload;
       draw(fragment);
     });
   }
+  private uniformParams: VertexShaderExecutorParams['uniform'] = {};
   private vertexParams: VertexShaderExecutorParams = {
     attribute: {},
+    uniform: this.uniformParams,
+  };
+  private fragmentParams: FragmentShaderExecutorParams = {
+    uniform: this.uniformParams,
   };
   public getAttribLocation(name: string) {
     return (vec: Vec) => {
       this.vertexParams.attribute[name] = vec;
+    };
+  }
+  public getUniformLocation(name: string) {
+    return (vec: Vec) => {
+      this.uniformParams[name] = vec;
     };
   }
 }

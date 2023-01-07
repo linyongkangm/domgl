@@ -63,11 +63,26 @@ export class WebglContext {
   public getAttribLocation(program: Program, name: string) {
     return program.getAttribLocation(name);
   }
+  public getUniformLocation(program: Program, name: string) {
+    return program.getUniformLocation(name);
+  }
   public vertexAttrib3f(location: ReturnType<WebglContext['getAttribLocation']>, a: number, b: number, c: number) {
     location([a, b, c]);
   }
   public vertexAttrib4f(
     location: ReturnType<WebglContext['getAttribLocation']>,
+    a: number,
+    b: number,
+    c: number,
+    d: number
+  ) {
+    location([a, b, c, d]);
+  }
+  public uniform3f(location: ReturnType<WebglContext['getUniformLocation']>, a: number, b: number, c: number) {
+    location([a, b, c]);
+  }
+  public uniform4f(
+    location: ReturnType<WebglContext['getUniformLocation']>,
     a: number,
     b: number,
     c: number,
