@@ -7,8 +7,6 @@ import {
   ShaderExecutor,
   VertexShaderExecutor,
   FragmentShaderExecutor,
-  VertexShaderExecutorPayload,
-  FragmentShaderExecutorPayload,
 } from './interface';
 import { Program } from './Program';
 import { FragmentShader, Shader, VertexShader } from './Shader';
@@ -44,6 +42,9 @@ export class WebglContext {
   }
   private programs = new Set<Program>();
   private currentProgram?: Program;
+  public get program() {
+    return this.currentProgram;
+  }
   public createProgram(): Program {
     return new Program();
   }
@@ -59,13 +60,24 @@ export class WebglContext {
       this.currentProgram = program;
     }
   }
+  public getAttribLocation(program: Program, name: string) {
+    return program.getAttribLocation(name);
+  }
+  public vertexAttrib3f(location: ReturnType<WebglContext['getAttribLocation']>, a: number, b: number, c: number) {
+    location([a, b, c]);
+  }
+  public vertexAttrib4f(
+    location: ReturnType<WebglContext['getAttribLocation']>,
+    a: number,
+    b: number,
+    c: number,
+    d: number
+  ) {
+    location([a, b, c, d]);
+  }
 
-  private willRasterizeFragmentPayload: {
-    vertexShaderExecutorPayload?: VertexShaderExecutorPayload;
-    fragmentShaderExecutorPayload?: FragmentShaderExecutorPayload;
-  }[] = [];
   public drawArrays(mode: DrawArraysMode, first: number, count: number) {
-    this.willRasterizeFragmentPayload = [];
+    this.currentProgram?.resetWillRasterizeFragmentPayload();
     // 绘制顶点
     while (count--) {
       this.drawPoint();
@@ -80,28 +92,14 @@ export class WebglContext {
   }
 
   private drawPoint() {
-    const payload: VertexShaderExecutorPayload = {};
-    this.currentProgram?.vertexShader?.executor?.(payload);
-    if (payload.Position) {
-      this.willRasterizeFragmentPayload.push({
-        vertexShaderExecutorPayload: payload,
-      });
-    }
+    this.currentProgram?.execvVertexShader();
   }
 
-  private assemble() {
-    console.log(this.willRasterizeFragmentPayload);
-  }
+  private assemble() {}
   private rasterize() {
-    this.willRasterizeFragmentPayload.forEach((fragment) => {
-      const payload: FragmentShaderExecutorPayload = {};
-      this.currentProgram?.fragmentShader?.executor?.(payload);
-      fragment.fragmentShaderExecutorPayload = payload;
-
-      this.draw(fragment);
-    });
+    this.currentProgram?.execFragmentShader(this.draw.bind(this));
   }
-  private draw(fragmentPayload: WebglContext['willRasterizeFragmentPayload'][0]) {
+  private draw(fragmentPayload: Program['willRasterizeFragmentPayload'][0]) {
     const shaderPosition = fragmentPayload.vertexShaderExecutorPayload?.Position;
     if (!shaderPosition) {
       return;

@@ -2,16 +2,17 @@ export type Vec1 = [number];
 export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
 export type Vec4 = [number, number, number, number];
-
+export type Vec = Vec1 | Vec2 | Vec3 | Vec4;
 export type Pigment = number;
 export type Color = [Pigment, Pigment, Pigment, Pigment];
 export type ScreenPosition = { x: number; y: number };
 export type FragmentBufferData = [ScreenPosition, Color];
 export type ShaderPosition = Vec4;
 export type VertexShaderExecutorPayload = { Position?: ShaderPosition; PointSize?: number };
-export type VertexShaderExecutor = (gl: VertexShaderExecutorPayload) => void;
+export type VertexShaderExecutorParams = { attribute: { [key: string]: Vec } };
+export type VertexShaderExecutor = (gl: VertexShaderExecutorPayload, params: VertexShaderExecutorParams) => void;
 export type FragmentShaderExecutorPayload = { FragColor?: Color };
-export type FragmentShaderExecutor = (gl: FragmentShaderExecutorPayload) => void;
+export type FragmentShaderExecutor = (gl: FragmentShaderExecutorPayload, params: any) => void;
 export type ShaderExecutor = VertexShaderExecutor | FragmentShaderExecutor;
 export interface ICanvas {
   width: number;

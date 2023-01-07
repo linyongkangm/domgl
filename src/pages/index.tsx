@@ -1,5 +1,12 @@
 import Stage from '@/component/Stage';
-import { DrawArraysMode, FragmentShaderExecutor, ICanvas, ShaderType, VertexShaderExecutor } from '@/webglContext';
+import {
+  DrawArraysMode,
+  FragmentShaderExecutor,
+  ICanvas,
+  ShaderType,
+  Vec4,
+  VertexShaderExecutor,
+} from '@/webglContext';
 import { WebglContext } from '@/webglContext/WebglContext';
 import { useEffect, useRef } from 'react';
 
@@ -36,18 +43,22 @@ export default function HomePage() {
 
     initShader(
       context,
-      (gl) => {
-        gl.Position = [0, 0, 0, 1];
+      (gl, params) => {
+        gl.Position = params.attribute.a_Position as Vec4;
       },
       (gl) => {
         gl.FragColor = [1, 0, 0, 1];
       }
     );
+    if (context.program) {
+      const location = context.getAttribLocation(context.program, 'a_Position');
+      context.vertexAttrib4f(location, 0, 0, 0, 1);
 
-    context.claerColor(0.0, 1.0, 0.0, 1.0);
-    context.clear(context.COLOR_BUFFER_BIT);
+      context.claerColor(0.0, 1.0, 0.0, 1.0);
+      context.clear(context.COLOR_BUFFER_BIT);
 
-    context.drawArrays(DrawArraysMode.POINTS, 0, 1);
+      context.drawArrays(DrawArraysMode.POINTS, 0, 1);
+    }
   }, []);
   return (
     <div>
