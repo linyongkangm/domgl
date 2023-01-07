@@ -1,11 +1,11 @@
-export type Pigment = Number;
+export type Pigment = number;
 export type Color = [Pigment, Pigment, Pigment, Pigment];
 export type ScreenPosition = { x: number; y: number };
 export type FragmentBufferData = [ScreenPosition, Color];
 export interface ICanvas {
   width: number;
   height: number;
-  render(buffer: FragmentBuffer): void;
+  render(buffer: { values: IBuffer<FragmentBufferData>['values'] }): void;
   clear(red: Pigment, green: Pigment, blue: Pigment, alpha: Pigment): void;
 }
 
