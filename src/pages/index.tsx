@@ -1,7 +1,30 @@
 import Stage from '@/component/Stage';
-import { ICanvas } from '@/webglContext';
+import { DrawArraysMode, FragmentShaderExecutor, ICanvas, ShaderType, VertexShaderExecutor } from '@/webglContext';
 import { WebglContext } from '@/webglContext/WebglContext';
 import { useEffect, useRef } from 'react';
+
+function initShader(
+  context: WebglContext,
+  vertexExecutor: VertexShaderExecutor,
+  fragmentExecutor: FragmentShaderExecutor
+) {
+  const vertexShader = context.createShader(ShaderType.VERTEX_SHADER);
+  const fragmentShader = context.createShader(ShaderType.FRAGMENT_SHADER);
+
+  context.shaderSource(vertexShader, vertexExecutor);
+  context.shaderSource(fragmentShader, fragmentExecutor);
+
+  context.compileShader(vertexShader);
+  context.compileShader(fragmentShader);
+
+  const program = context.createProgram();
+  context.attachShader(program, vertexShader);
+  context.attachShader(program, fragmentShader);
+
+  context.linkProgram(program);
+  context.useProgram(program);
+}
+
 export default function HomePage() {
   const stageRef = useRef<ICanvas>(null);
   useEffect(() => {
@@ -10,7 +33,21 @@ export default function HomePage() {
       return;
     }
     const context = new WebglContext(stage);
-    context.claerColor(1.0, 0.0, 0.0, 1.0);
+
+    initShader(
+      context,
+      (gl) => {
+        gl.Position = [0, 0, 0, 1];
+      },
+      (gl) => {
+        gl.FragColor = [1, 0, 0, 1];
+      }
+    );
+
+    context.claerColor(0.0, 1.0, 0.0, 1.0);
+    context.clear(context.COLOR_BUFFER_BIT);
+
+    context.drawArrays(DrawArraysMode.POINTS, 0, 1);
   }, []);
   return (
     <div>
