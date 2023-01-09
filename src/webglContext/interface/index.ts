@@ -4,7 +4,7 @@ export type Vec3 = [number, number, number];
 export type Vec4 = [number, number, number, number];
 export type Vec = Vec1 | Vec2 | Vec3 | Vec4;
 export type Pigment = number;
-export type Color = [Pigment, Pigment, Pigment, Pigment];
+export type Color = Vec4;
 export type ScreenPosition = { x: number; y: number };
 export type FragmentBufferData = [ScreenPosition, Color];
 export type ShaderPosition = Vec4;
@@ -18,7 +18,7 @@ export type ShaderExecutor = VertexShaderExecutor | FragmentShaderExecutor;
 export interface ICanvas {
   width: number;
   height: number;
-  render(buffer: { values: IBuffer<FragmentBufferData>['values'] }): void;
+  render(buffer: Uint8ClampedArray): void;
   clear(red: Pigment, green: Pigment, blue: Pigment, alpha: Pigment): void;
 }
 

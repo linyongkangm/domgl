@@ -1,4 +1,4 @@
-import { FragmentBuffer } from './buffer';
+import { FragmentBufferProxy } from './buffer';
 import {
   ICanvas,
   Pigment,
@@ -12,13 +12,14 @@ import { Program } from './Program';
 import { FragmentShader, Shader, VertexShader } from './Shader';
 
 export class WebglContext {
-  private fragmentBuffer = new FragmentBuffer();
+  private fragmentBuffer: FragmentBufferProxy;
   public get COLOR_BUFFER_BIT() {
     return this.fragmentBuffer;
   }
   private canvas: ICanvas;
   constructor(canvas: ICanvas) {
     this.canvas = canvas;
+    this.fragmentBuffer = new FragmentBufferProxy(this.canvas.width, this.canvas.height);
   }
 
   public claerColor(red: Pigment = 0.0, green: Pigment = 0.0, blue: Pigment = 0.0, alpha: Pigment = 0.0) {
@@ -119,20 +120,13 @@ export class WebglContext {
     if (!shaderPosition) {
       return;
     }
-    const pxPosition = {
-      x: ((shaderPosition[0] + 1) / 2) * this.canvas.width,
-      y: ((-shaderPosition[1] + 1) / 2) * this.canvas.height,
-    };
-    const indexPosition = {
-      x: Math.min(Math.floor(pxPosition.x), this.canvas.width - 1),
-      y: Math.min(Math.floor(pxPosition.y), this.canvas.height - 1),
-    };
+
     const color = fragmentPayload.fragmentShaderExecutorPayload?.FragColor;
     if (color) {
-      this.fragmentBuffer.bufferData([indexPosition, color]);
+      this.fragmentBuffer.bufferColor(shaderPosition[0], shaderPosition[1], color);
     }
   }
   private render() {
-    this.canvas.render(this.fragmentBuffer);
+    this.canvas.render(this.fragmentBuffer.toUint8ClampedArray());
   }
 }

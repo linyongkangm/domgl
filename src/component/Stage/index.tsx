@@ -27,27 +27,11 @@ const Stage = forwardRef<
           }
         },
         render(buffer) {
-          if (!ctx) {
-            return;
+          const ctx = stage?.getContext('2d');
+          if (ctx) {
+            const imageData = new ImageData(buffer, props.width, props.height);
+            ctx.putImageData(imageData, 0, 0);
           }
-          const dataSource = buffer.values();
-
-          const length = props.width * props.height * 4;
-          const view = new DataView(new ArrayBuffer(length));
-          for (let i = 3; i < length; i = i + 4) {
-            view.setUint8(i, 255);
-          }
-          for (const data of dataSource) {
-            console.log(data);
-            const [position, color] = data;
-            const item = (props.height * position.y + position.x) * 4;
-            color.forEach((comp, index) => {
-              view.setUint8(item + index, comp * 255);
-            });
-          }
-          const uintc8 = new Uint8ClampedArray(view.buffer);
-          const imageData = new ImageData(uintc8, props.width, props.height);
-          ctx.putImageData(imageData, 0, 0);
         },
       };
     },
