@@ -53,18 +53,14 @@ export default function HomePage() {
       return;
     }
 
-    context.vertexAttrib4f(context.getAttribLocation(context.program, 'a_Position'), 0, 0, 0, 1);
+    context.vertexAttrib4f(context.getAttribLocation(context.program, 'a_Position'), 1, 1, 0, 1);
 
-    context.uniform4f(context.getUniformLocation(context.program, 'u_FragColor'), 1, 1, 1, 1);
+    context.uniform4f(context.getUniformLocation(context.program, 'u_FragColor'), 0.5, 1, 1, 1);
 
     context.claerColor(0.0, 1.0, 0.0, 1.0);
     context.clear(context.COLOR_BUFFER_BIT);
 
     context.drawArrays(DrawArraysMode.POINTS, 0, 1);
   }, []);
-  return (
-    <div>
-      <Stage ref={stageRef} width={30} height={30} style={{ width: 500, height: 500 }}></Stage>
-    </div>
-  );
+  return <Stage ref={stageRef} width={30} height={30} style={{ width: 500, height: 500 }}></Stage>;
 }
