@@ -9,10 +9,6 @@ import {
 } from './interface';
 import { Shader, VertexShader, FragmentShader } from './Shader';
 export class Program {
-  private willRasterizeFragmentPayload: {
-    vertexShaderExecutorPayload?: VertexShaderExecutorPayload;
-    fragmentShaderExecutorPayload?: FragmentShaderExecutorPayload;
-  }[] = [];
   private vertexShader?: VertexShader;
   private fragmentShader?: FragmentShader;
 
@@ -30,9 +26,6 @@ export class Program {
       this.attachFragmentShader(shader as FragmentShader);
     }
   }
-  public resetWillRasterizeFragmentPayload() {
-    this.willRasterizeFragmentPayload = [];
-  }
   public execvVertexShader() {
     const payload: VertexShaderExecutorPayload = {
       PointSize: 1,
@@ -46,18 +39,12 @@ export class Program {
     });
     this.vertexShader?.executor?.(payload, { attribute, uniform: this.vertexParams.uniform });
     if (payload.Position) {
-      this.willRasterizeFragmentPayload.push({
-        vertexShaderExecutorPayload: payload,
-      });
+      return payload;
     }
   }
-  public execFragmentShader(draw: (payload: Program['willRasterizeFragmentPayload'][0]) => void) {
-    this.willRasterizeFragmentPayload.forEach((fragment) => {
-      const payload: FragmentShaderExecutorPayload = {};
-      this?.fragmentShader?.executor?.(payload, this.fragmentParams);
-      fragment.fragmentShaderExecutorPayload = payload;
-      draw(fragment);
-    });
+  public execFragmentShader(payload: VertexShaderExecutorPayload & FragmentShaderExecutorPayload) {
+    this?.fragmentShader?.executor?.(payload, this.fragmentParams);
+    return payload;
   }
   private uniformParams: VertexShaderExecutorParams['uniform'] = {};
   private vertexParams = {

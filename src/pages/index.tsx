@@ -68,7 +68,7 @@ export default function HomePage() {
     context.claerColor(0.0, 1.0, 0.0, 1.0);
     context.clear(context.COLOR_BUFFER_BIT);
 
-    context.drawArrays(DrawArraysMode.POINTS, 0, vertices.length);
+    context.drawArrays(DrawArraysMode.TRIANGLES, 0, vertices.length);
   }, []);
   return <Stage ref={stageRef} width={30} height={30} style={{ width: 500, height: 500 }}></Stage>;
 }

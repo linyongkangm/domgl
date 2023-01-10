@@ -9,6 +9,8 @@ import {
   VertexShaderExecutor,
   FragmentShaderExecutor,
   BufferTarget,
+  VertexShaderExecutorPayload,
+  FragmentShaderExecutorPayload,
 } from './interface';
 import { Program } from './Program';
 import { FragmentShader, Shader, VertexShader } from './Shader';
@@ -122,37 +124,43 @@ export class WebglContext {
   ) {
     location(new Float32Array([a, b, c, d]));
   }
-
+  private willRasterizeFragmentPayload: (VertexShaderExecutorPayload & FragmentShaderExecutorPayload)[] = [];
   public drawArrays(mode: DrawArraysMode, first: number, count: number) {
-    this.currentProgram?.resetWillRasterizeFragmentPayload();
     // 绘制顶点
-    while (count--) {
-      this.drawPoint();
-    }
+    this.drawPoints(count);
     // 装配图元
     this.assemble();
     // 光栅化
     this.rasterize();
     // 渲染
     this.render();
+    this.willRasterizeFragmentPayload = [];
   }
 
-  private drawPoint() {
-    this.currentProgram?.execvVertexShader();
+  private drawPoints(count: number) {
+    while (count--) {
+      const payload = this.currentProgram?.execvVertexShader();
+      if (payload) {
+        this.willRasterizeFragmentPayload.push(payload);
+      }
+    }
   }
   // 装配图元
   private assemble() {}
   // 光栅化
   private rasterize() {
-    this.currentProgram?.execFragmentShader(this.drawFragment.bind(this));
+    this.willRasterizeFragmentPayload.forEach((payload) => {
+      this.currentProgram?.execFragmentShader(payload);
+      this.drawFragment(payload);
+    });
   }
-  private drawFragment(fragmentPayload: Program['willRasterizeFragmentPayload'][0]) {
-    const shaderPosition = fragmentPayload.vertexShaderExecutorPayload?.Position;
+  private drawFragment(payload: WebglContext['willRasterizeFragmentPayload'][0]) {
+    const shaderPosition = payload?.Position;
     if (!shaderPosition) {
       return;
     }
 
-    const color = fragmentPayload.fragmentShaderExecutorPayload?.FragColor;
+    const color = payload?.FragColor;
     if (color) {
       this.fragmentBuffer.bufferColor(shaderPosition[0], shaderPosition[1], color);
     }
