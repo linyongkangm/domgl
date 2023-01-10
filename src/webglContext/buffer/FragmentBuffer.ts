@@ -1,5 +1,7 @@
 import { Color } from '../interface';
 
+const DefaultColor = new Float32Array([0, 0, 0, 1]);
+
 /**
  * 到这里已经是interval[0, 255]的值
  */
@@ -60,23 +62,23 @@ export class FragmentBufferProxy {
    * @param y interval[-1, 1]
    * @param color [interval[0, 1] * 4]
    */
-  public bufferColor(x: number, y: number, color: Color = [0, 0, 0, 1]) {
+  public bufferColor(x: number, y: number, color: Color = DefaultColor) {
     const indexX = Math.min(Math.floor(((x + 1) / 2) * this.fragmentBuffer.width), this.fragmentBuffer.width - 1);
     const indexY = Math.min(Math.floor(((-y + 1) / 2) * this.fragmentBuffer.height), this.fragmentBuffer.height - 1);
-    const at = indexY * this.fragmentBuffer.width + indexX * 4;
+    const at = (indexY * this.fragmentBuffer.width + indexX) * 4;
     this.fragmentBuffer.bufferColor(at, this.colorToUint8ClampedArray(color));
   }
   /**
    *
    * @param color [interval[0, 1] * 4]
    */
-  public clear(color: Color = [0, 0, 0, 1]) {
+  public clear(color: Color = DefaultColor) {
     this.fragmentBuffer.clear(this.colorToUint8ClampedArray(color));
   }
   public toUint8ClampedArray() {
     return this.fragmentBuffer.toUint8ClampedArray();
   }
-  private colorToUint8ClampedArray(color: Color = [0, 0, 0, 1]) {
+  private colorToUint8ClampedArray(color: Color = DefaultColor) {
     return new Uint8ClampedArray(
       color.map((item) => {
         return Math.round(item * 255);

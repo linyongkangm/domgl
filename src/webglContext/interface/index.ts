@@ -1,12 +1,10 @@
-export type Vec1 = [number];
-export type Vec2 = [number, number];
-export type Vec3 = [number, number, number];
-export type Vec4 = [number, number, number, number];
-export type Vec = Vec1 | Vec2 | Vec3 | Vec4;
+export type Vec = Float32Array;
+export type Vec1 = Vec;
+export type Vec2 = Vec;
+export type Vec3 = Vec;
+export type Vec4 = Vec;
 export type Pigment = number;
 export type Color = Vec4;
-export type ScreenPosition = { x: number; y: number };
-export type FragmentBufferData = [ScreenPosition, Color];
 export type ShaderPosition = Vec4;
 export type VertexShaderExecutorPayload = { Position?: ShaderPosition; PointSize?: number };
 export type VertexShaderExecutorParams = { attribute: { [key: string]: Vec }; uniform: { [key: string]: Vec } };
@@ -54,4 +52,8 @@ export enum DrawArraysMode {
 export enum ShaderType {
   VERTEX_SHADER,
   FRAGMENT_SHADER,
+}
+
+export enum BufferTarget {
+  ARRAY_BUFFER,
 }

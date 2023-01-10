@@ -1,4 +1,5 @@
-import { FragmentBufferProxy } from './buffer';
+import { FragmentBufferProxy } from './buffer/FragmentBuffer';
+import { Buffer } from './buffer/Buffer';
 import {
   ICanvas,
   Pigment,
@@ -7,6 +8,7 @@ import {
   ShaderExecutor,
   VertexShaderExecutor,
   FragmentShaderExecutor,
+  BufferTarget,
 } from './interface';
 import { Program } from './Program';
 import { FragmentShader, Shader, VertexShader } from './Shader';
@@ -15,6 +17,10 @@ export class WebglContext {
   private fragmentBuffer: FragmentBufferProxy;
   public get COLOR_BUFFER_BIT() {
     return this.fragmentBuffer;
+  }
+  private arrayBufferTarget?: Buffer;
+  public get ARRAY_BUFFER() {
+    return BufferTarget.ARRAY_BUFFER;
   }
   private canvas: ICanvas;
   constructor(canvas: ICanvas) {
@@ -61,14 +67,39 @@ export class WebglContext {
       this.currentProgram = program;
     }
   }
+  public createBuffer() {
+    return new Buffer();
+  }
+  public bindBuffer(target: BufferTarget, buffer: Buffer) {
+    if (target === BufferTarget.ARRAY_BUFFER) {
+      this.arrayBufferTarget = buffer;
+    }
+  }
+  public bufferData(target: BufferTarget, data: Float32Array) {
+    if (target === BufferTarget.ARRAY_BUFFER && this.arrayBufferTarget) {
+      this.arrayBufferTarget.bufferData(data);
+    }
+  }
+
   public getAttribLocation(program: Program, name: string) {
     return program.getAttribLocation(name);
   }
   public getUniformLocation(program: Program, name: string) {
     return program.getUniformLocation(name);
   }
+  public vertexAttribPointer(
+    location: ReturnType<WebglContext['getAttribLocation']>,
+    size: number,
+    normalized: boolean,
+    stride: number,
+    offset: number
+  ) {
+    if (this.arrayBufferTarget) {
+      location(this.arrayBufferTarget, size, normalized, stride, offset);
+    }
+  }
   public vertexAttrib3f(location: ReturnType<WebglContext['getAttribLocation']>, a: number, b: number, c: number) {
-    location([a, b, c]);
+    location(new Float32Array([a, b, c]));
   }
   public vertexAttrib4f(
     location: ReturnType<WebglContext['getAttribLocation']>,
@@ -77,10 +108,10 @@ export class WebglContext {
     c: number,
     d: number
   ) {
-    location([a, b, c, d]);
+    location(new Float32Array([a, b, c, d]));
   }
   public uniform3f(location: ReturnType<WebglContext['getUniformLocation']>, a: number, b: number, c: number) {
-    location([a, b, c]);
+    location(new Float32Array([a, b, c]));
   }
   public uniform4f(
     location: ReturnType<WebglContext['getUniformLocation']>,
@@ -89,7 +120,7 @@ export class WebglContext {
     c: number,
     d: number
   ) {
-    location([a, b, c, d]);
+    location(new Float32Array([a, b, c, d]));
   }
 
   public drawArrays(mode: DrawArraysMode, first: number, count: number) {
@@ -102,7 +133,6 @@ export class WebglContext {
     this.assemble();
     // 光栅化
     this.rasterize();
-
     // 渲染
     this.render();
   }
@@ -110,12 +140,13 @@ export class WebglContext {
   private drawPoint() {
     this.currentProgram?.execvVertexShader();
   }
-
+  // 装配图元
   private assemble() {}
+  // 光栅化
   private rasterize() {
-    this.currentProgram?.execFragmentShader(this.draw.bind(this));
+    this.currentProgram?.execFragmentShader(this.drawFragment.bind(this));
   }
-  private draw(fragmentPayload: Program['willRasterizeFragmentPayload'][0]) {
+  private drawFragment(fragmentPayload: Program['willRasterizeFragmentPayload'][0]) {
     const shaderPosition = fragmentPayload.vertexShaderExecutorPayload?.Position;
     if (!shaderPosition) {
       return;

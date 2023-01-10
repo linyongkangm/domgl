@@ -1,3 +1,4 @@
+import { AttribLocation } from './AttribLocation';
 import {
   ShaderType,
   VertexShaderExecutorPayload,
@@ -7,7 +8,6 @@ import {
   FragmentShaderExecutorParams,
 } from './interface';
 import { Shader, VertexShader, FragmentShader } from './Shader';
-
 export class Program {
   private willRasterizeFragmentPayload: {
     vertexShaderExecutorPayload?: VertexShaderExecutorPayload;
@@ -37,7 +37,14 @@ export class Program {
     const payload: VertexShaderExecutorPayload = {
       PointSize: 1,
     };
-    this.vertexShader?.executor?.(payload, this.vertexParams);
+    const attribute: VertexShaderExecutorParams['attribute'] = {};
+    Object.entries(this.vertexParams.attribute).forEach(([key, location]) => {
+      const data = location?.getCurrentData?.();
+      if (data) {
+        attribute[key] = data;
+      }
+    });
+    this.vertexShader?.executor?.(payload, { attribute, uniform: this.vertexParams.uniform });
     if (payload.Position) {
       this.willRasterizeFragmentPayload.push({
         vertexShaderExecutorPayload: payload,
@@ -53,17 +60,17 @@ export class Program {
     });
   }
   private uniformParams: VertexShaderExecutorParams['uniform'] = {};
-  private vertexParams: VertexShaderExecutorParams = {
-    attribute: {},
+  private vertexParams = {
+    attribute: {} as { [key: string]: AttribLocation },
     uniform: this.uniformParams,
   };
   private fragmentParams: FragmentShaderExecutorParams = {
     uniform: this.uniformParams,
   };
   public getAttribLocation(name: string) {
-    return (vec: Vec) => {
-      this.vertexParams.attribute[name] = vec;
-    };
+    const location = new AttribLocation();
+    this.vertexParams.attribute[name] = location;
+    return location.setData.bind(location);
   }
   public getUniformLocation(name: string) {
     return (vec: Vec) => {
