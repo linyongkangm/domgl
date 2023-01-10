@@ -129,7 +129,7 @@ export class WebglContext {
     // 绘制顶点
     this.drawPoints(count);
     // 装配图元
-    this.assemble();
+    this.assemble(mode);
     // 光栅化
     this.rasterize();
     // 渲染
@@ -146,7 +146,35 @@ export class WebglContext {
     }
   }
   // 装配图元
-  private assemble() {}
+  private assemble(mode: DrawArraysMode) {
+    if (mode === DrawArraysMode.TRIANGLES) {
+      const [p1, p2, p3] = this.willRasterizeFragmentPayload;
+      function toPoint(array: Float32Array) {
+        const point: Point = { x: array.at(0) as number, y: array.at(1) as number };
+        return point;
+      }
+      if (p1.Position && p2.Position && p3.Position) {
+        const p1Point = toPoint(p1.Position);
+        const p2Point = toPoint(p2.Position);
+        const p3Point = toPoint(p3.Position);
+        const minX = Math.min(p1Point.x, p2Point.x, p3Point.x);
+        const minY = Math.min(p1Point.y, p2Point.y, p3Point.y);
+        const maxX = Math.max(p1Point.x, p2Point.x, p3Point.x);
+        const maxY = Math.max(p1Point.y, p2Point.y, p3Point.y);
+        for (let i = minX; i < maxX; i = i + 2 / this.canvas.width) {
+          for (let j = minY; j < maxY; j = j + 2 / this.canvas.height) {
+            const bol = isInTriangle(p1Point, p2Point, p3Point, { x: i, y: j });
+
+            if (bol) {
+              this.willRasterizeFragmentPayload.push({
+                Position: new Float32Array([i, j, 0, 0]),
+              });
+            }
+          }
+        }
+      }
+    }
+  }
   // 光栅化
   private rasterize() {
     this.willRasterizeFragmentPayload.forEach((payload) => {
@@ -168,4 +196,18 @@ export class WebglContext {
   private render() {
     this.canvas.render(this.fragmentBuffer.toUint8ClampedArray());
   }
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+function product(p1: Point, p2: Point, p3: Point) {
+  return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+}
+
+function isInTriangle(p1: Point, p2: Point, p3: Point, o: Point) {
+  if (product(p1, p2, o) > 0 && product(p2, p3, o) > 0 && product(p3, p1, o) > 0) return true;
+  return false;
 }
