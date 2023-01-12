@@ -57,8 +57,8 @@ export default function HomePage() {
     context.bindBuffer(context.ARRAY_BUFFER, vertexBuffer);
     const vertices = [
       [0.0, 0.5],
-      [-0.5, -0.5],
-      [0.5, -0.5],
+      [0.0, -0.5],
+      [0.5, 0],
     ];
     context.bufferData(context.ARRAY_BUFFER, new Float32Array(([] as number[]).concat(...vertices)));
     context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Position'), 2, false, 0, 0);

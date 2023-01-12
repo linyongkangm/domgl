@@ -6,8 +6,11 @@ import {
   VertexShaderExecutorParams,
   Vec,
   FragmentShaderExecutorParams,
+  Color,
+  ShaderPosition,
 } from './interface';
 import { Shader, VertexShader, FragmentShader } from './Shader';
+
 export class Program {
   private vertexShader?: VertexShader;
   private fragmentShader?: FragmentShader;
@@ -26,10 +29,7 @@ export class Program {
       this.attachFragmentShader(shader as FragmentShader);
     }
   }
-  public execvVertexShader() {
-    const payload: VertexShaderExecutorPayload = {
-      PointSize: 1,
-    };
+  public execvVertexShader(payload: VertexShaderExecutorPayload) {
     const attribute: VertexShaderExecutorParams['attribute'] = {};
     Object.entries(this.vertexParams.attribute).forEach(([key, location]) => {
       const data = location?.getCurrentData?.();

@@ -14,6 +14,49 @@ import {
 } from './interface';
 import { Program } from './Program';
 import { FragmentShader, Shader, VertexShader } from './Shader';
+import { ShaderExecutorPayload } from './ShaderExecutorPayload';
+
+function group<T>(arr: T[], num: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0, len = arr.length; i < len; i += num) {
+    result.push(arr.slice(i, i + num));
+  }
+  return result;
+}
+
+function toPoint(array: Float32Array) {
+  const point: Point = { x: array.at(0) as number, y: array.at(1) as number };
+  return point;
+}
+interface Point {
+  x: number;
+  y: number;
+}
+
+function pointInTriangle(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  x3: number,
+  y3: number
+) {
+  var pisor = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+  var a = ((y2 - y3) * (x0 - x3) + (x3 - x2) * (y0 - y3)) / pisor;
+  var b = ((y3 - y1) * (x0 - x3) + (x1 - x3) * (y0 - y3)) / pisor;
+  var c = 1 - a - b;
+
+  return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
+}
+function product(p1: Point, p2: Point, p3: Point) {
+  return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+}
+
+function isInTriangle(p1: Point, p2: Point, p3: Point, o: Point) {
+  return pointInTriangle(o.x, o.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+}
 
 export class WebglContext {
   private fragmentBuffer: FragmentBufferProxy;
@@ -124,65 +167,72 @@ export class WebglContext {
   ) {
     location(new Float32Array([a, b, c, d]));
   }
-  private willRasterizeFragmentPayload: (VertexShaderExecutorPayload & FragmentShaderExecutorPayload)[] = [];
   public drawArrays(mode: DrawArraysMode, first: number, count: number) {
     // 绘制顶点
     this.drawPoints(count);
     // 装配图元
     this.assemble(mode);
+
+    this.vertexShaderResults = [];
     // 光栅化
     this.rasterize();
+
+    this.rasterGroup = [];
     // 渲染
     this.render();
-    this.willRasterizeFragmentPayload = [];
   }
-
+  private vertexShaderResults: ShaderExecutorPayload[] = [];
   private drawPoints(count: number) {
     while (count--) {
-      const payload = this.currentProgram?.execvVertexShader();
-      if (payload) {
-        this.willRasterizeFragmentPayload.push(payload);
-      }
+      const payload = new ShaderExecutorPayload(this.canvas.width, this.canvas.height);
+      this.currentProgram?.execvVertexShader(payload);
+      this.vertexShaderResults.push(payload);
     }
   }
+  private rasterGroup: ShaderExecutorPayload[][] = [];
   // 装配图元
   private assemble(mode: DrawArraysMode) {
     if (mode === DrawArraysMode.TRIANGLES) {
-      const [p1, p2, p3] = this.willRasterizeFragmentPayload;
-      function toPoint(array: Float32Array) {
-        const point: Point = { x: array.at(0) as number, y: array.at(1) as number };
-        return point;
-      }
-      if (p1.Position && p2.Position && p3.Position) {
-        const p1Point = toPoint(p1.Position);
-        const p2Point = toPoint(p2.Position);
-        const p3Point = toPoint(p3.Position);
-        const minX = Math.min(p1Point.x, p2Point.x, p3Point.x);
-        const minY = Math.min(p1Point.y, p2Point.y, p3Point.y);
-        const maxX = Math.max(p1Point.x, p2Point.x, p3Point.x);
-        const maxY = Math.max(p1Point.y, p2Point.y, p3Point.y);
-        for (let i = minX; i < maxX; i = i + 2 / this.canvas.width) {
-          for (let j = minY; j < maxY; j = j + 2 / this.canvas.height) {
-            const bol = isInTriangle(p1Point, p2Point, p3Point, { x: i, y: j });
-
-            if (bol) {
-              this.willRasterizeFragmentPayload.push({
-                Position: new Float32Array([i, j, 0, 0]),
+      this.rasterGroup = group(this.vertexShaderResults, 3);
+      this.rasterGroup.forEach((chunk) => {
+        const [p1, p2, p3] = chunk;
+        const p1Position = p1.zoomPosition;
+        const p2Position = p2.zoomPosition;
+        const p3Position = p3.zoomPosition;
+        if (p1Position && p2Position && p3Position) {
+          const minX = Math.min(p1Position.x, p2Position.x, p3Position.x);
+          const minY = Math.min(p1Position.y, p2Position.y, p3Position.y);
+          const maxX = Math.max(p1Position.x, p2Position.x, p3Position.x);
+          const maxY = Math.max(p1Position.y, p2Position.y, p3Position.y);
+          console.log(p1Position, p2Position, p3Position);
+          for (let i = minX; i < maxX; i = i + 1) {
+            for (let j = minY; j < maxY; j = j + 1) {
+              const bol = isInTriangle(p1Position, p2Position, p3Position, {
+                x: i,
+                y: j,
               });
+              console.log(i, j, bol);
+              if (bol) {
+                const payload = new ShaderExecutorPayload(this.canvas.width, this.canvas.height);
+                payload.setPositionFromZoomPosition({ x: i, y: j });
+                chunk.push(payload);
+              }
             }
           }
         }
-      }
+      });
     }
   }
   // 光栅化
   private rasterize() {
-    this.willRasterizeFragmentPayload.forEach((payload) => {
-      this.currentProgram?.execFragmentShader(payload);
-      this.drawFragment(payload);
+    this.rasterGroup.forEach((chunk) => {
+      chunk.forEach((payload) => {
+        this.currentProgram?.execFragmentShader(payload);
+        this.drawFragment(payload);
+      });
     });
   }
-  private drawFragment(payload: WebglContext['willRasterizeFragmentPayload'][0]) {
+  private drawFragment(payload: ShaderExecutorPayload) {
     const shaderPosition = payload?.Position;
     if (!shaderPosition) {
       return;
@@ -196,18 +246,4 @@ export class WebglContext {
   private render() {
     this.canvas.render(this.fragmentBuffer.toUint8ClampedArray());
   }
-}
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-function product(p1: Point, p2: Point, p3: Point) {
-  return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
-}
-
-function isInTriangle(p1: Point, p2: Point, p3: Point, o: Point) {
-  if (product(p1, p2, o) > 0 && product(p2, p3, o) > 0 && product(p3, p1, o) > 0) return true;
-  return false;
 }
