@@ -130,6 +130,7 @@ export class WebglContext {
   public getUniformLocation(program: Program, name: string) {
     return program.getUniformLocation(name);
   }
+  // 将绑定到ARRAY_BUFFER的缓冲区对象分配给有location指定的attribute对象
   public vertexAttribPointer(
     location: ReturnType<WebglContext['getAttribLocation']>,
     size: number,

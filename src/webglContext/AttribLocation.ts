@@ -28,16 +28,18 @@ export class AttribLocation {
     stride: number;
     offset: number;
   };
-  private currentOffset = 0;
+  private currentAt = 0;
   private linkBuffer(buffer: Buffer, size: number, normalized: boolean, stride: number, offset: number) {
-    this.currentOffset = offset;
+    this.currentAt = 0;
     this.bufferPointer = { buffer, size, normalized, stride, offset };
     this.getCurrentData = this.getBufferData;
   }
   private getBufferData() {
     if (this.bufferPointer) {
-      const data = this.bufferPointer.buffer.subarray(this.currentOffset, this.currentOffset + this.bufferPointer.size);
-      this.currentOffset = this.currentOffset + this.bufferPointer.size;
+      const start = this.currentAt + this.bufferPointer.offset;
+      const end = start + this.bufferPointer.size;
+      const data = this.bufferPointer.buffer.subarray(start, end);
+      this.currentAt = this.currentAt + (this.bufferPointer.stride || this.bufferPointer.size);
       return data;
     }
   }
