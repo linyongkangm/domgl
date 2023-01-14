@@ -57,6 +57,9 @@ export default function HomePage() {
     context.bindBuffer(context.ARRAY_BUFFER, vertexBuffer);
     const vertices = [
       [0.0, 0.5],
+      [-0.5, 0.0],
+      [0.0, -0.5],
+      [0.0, 0.5],
       [0.0, -0.5],
       [0.5, 0],
     ];

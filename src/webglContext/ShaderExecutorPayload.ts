@@ -39,4 +39,7 @@ export class ShaderExecutorPayload implements VertexShaderExecutorPayload, Fragm
     ]);
     this._zoomPosition = zoomPosition;
   }
+  public sameZoomPosition(zoomPosition: ShaderPosition) {
+    return this.zoomPosition[0] === zoomPosition[0] && this.zoomPosition[1] === zoomPosition[1];
+  }
 }

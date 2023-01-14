@@ -205,11 +205,13 @@ export class WebglContext {
           for (let i = minX; i < maxX; i = i + 1) {
             for (let j = minY; j < maxY; j = j + 1) {
               const o = new Float32Array([i, j, 0, 1]);
-              const bol = isInTriangle(p1Position, p2Position, p3Position, o);
-              if (bol) {
-                const payload = new ShaderExecutorPayload(this.canvas.width, this.canvas.height);
-                payload.zoomPosition = o;
-                chunk.push(payload);
+              if (!(p1.sameZoomPosition(o) || p2.sameZoomPosition(o) || p3.sameZoomPosition(o))) {
+                const bol = isInTriangle(p1Position, p2Position, p3Position, o);
+                if (bol) {
+                  const payload = new ShaderExecutorPayload(this.canvas.width, this.canvas.height);
+                  payload.zoomPosition = o;
+                  chunk.push(payload);
+                }
               }
             }
           }
