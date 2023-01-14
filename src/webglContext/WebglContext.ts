@@ -271,7 +271,6 @@ export class WebglContext {
                 values[0][3] * inter[0] + values[1][3] * inter[1] + values[2][3] * inter[2],
               ]));
           });
-          console.log(varying);
           this.currentProgram?.execFragmentShader(payload, varying);
           this.drawFragment(payload);
         });

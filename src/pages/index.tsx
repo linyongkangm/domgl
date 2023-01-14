@@ -47,7 +47,6 @@ export default function HomePage() {
         params.varying.v_Color = params.attribute.a_Color;
       },
       (gl, params) => {
-        console.log('params.varying', params.varying.v_Color);
         gl.FragColor = params.varying.v_Color || params.uniform.u_FragColor;
       }
     );
@@ -70,12 +69,10 @@ export default function HomePage() {
 
     context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Color'), 4, false, 6, 2);
 
-    // context.uniform4f(context.getUniformLocation(context.program, 'u_FragColor'), 0, 0, 1, 1);
-
     context.claerColor(0.0, 1.0, 0.0, 1.0);
     context.clear(context.COLOR_BUFFER_BIT);
 
     context.drawArrays(DrawArraysMode.TRIANGLES, 0, vertices.length);
   }, []);
-  return <Stage ref={stageRef} width={30} height={30} style={{ width: 500, height: 500 }}></Stage>;
+  return <Stage ref={stageRef} width={500} height={500} style={{ width: 500, height: 500 }}></Stage>;
 }
