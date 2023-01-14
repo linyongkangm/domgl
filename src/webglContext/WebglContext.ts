@@ -9,6 +9,7 @@ import {
   VertexShaderExecutor,
   FragmentShaderExecutor,
   BufferTarget,
+  ShaderPosition,
 } from './interface';
 import { Program } from './Program';
 import { FragmentShader, Shader, VertexShader } from './Shader';
@@ -51,8 +52,8 @@ function product(p1: Point, p2: Point, p3: Point) {
   return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
 }
 
-function isInTriangle(p1: Point, p2: Point, p3: Point, o: Point) {
-  return pointInTriangle(o.x, o.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+function isInTriangle(p1: ShaderPosition, p2: ShaderPosition, p3: ShaderPosition, o: ShaderPosition) {
+  return pointInTriangle(o[0], o[1], p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
 }
 
 export class WebglContext {
@@ -197,19 +198,17 @@ export class WebglContext {
         const p2Position = p2.zoomPosition;
         const p3Position = p3.zoomPosition;
         if (p1Position && p2Position && p3Position) {
-          const minX = Math.min(p1Position.x, p2Position.x, p3Position.x);
-          const minY = Math.min(p1Position.y, p2Position.y, p3Position.y);
-          const maxX = Math.max(p1Position.x, p2Position.x, p3Position.x);
-          const maxY = Math.max(p1Position.y, p2Position.y, p3Position.y);
+          const minX = Math.min(p1Position[0], p2Position[0], p3Position[0]);
+          const minY = Math.min(p1Position[1], p2Position[1], p3Position[1]);
+          const maxX = Math.max(p1Position[0], p2Position[0], p3Position[0]);
+          const maxY = Math.max(p1Position[1], p2Position[1], p3Position[1]);
           for (let i = minX; i < maxX; i = i + 1) {
             for (let j = minY; j < maxY; j = j + 1) {
-              const bol = isInTriangle(p1Position, p2Position, p3Position, {
-                x: i,
-                y: j,
-              });
+              const o = new Float32Array([i, j, 0, 1]);
+              const bol = isInTriangle(p1Position, p2Position, p3Position, o);
               if (bol) {
                 const payload = new ShaderExecutorPayload(this.canvas.width, this.canvas.height);
-                payload.setPositionFromZoomPosition({ x: i, y: j });
+                payload.zoomPosition = o;
                 chunk.push(payload);
               }
             }
@@ -228,15 +227,18 @@ export class WebglContext {
     });
   }
   private drawFragment(payload: ShaderExecutorPayload) {
-    const shaderPosition = payload?.Position;
+    const shaderPosition = payload?.zoomPosition;
     if (!shaderPosition) {
       return;
     }
 
     const color = payload?.FragColor;
     if (color) {
-      console.log(shaderPosition);
-      this.fragmentBuffer.bufferColor(shaderPosition[0], shaderPosition[1], color);
+      this.fragmentBuffer.bufferColor(
+        shaderPosition[0] + this.canvas.width / 2,
+        shaderPosition[1] + this.canvas.height / 2,
+        color
+      );
     }
   }
   private render() {

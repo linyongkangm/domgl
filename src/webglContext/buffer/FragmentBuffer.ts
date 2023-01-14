@@ -63,11 +63,8 @@ export class FragmentBufferProxy {
    * @param y interval[-1, 1]
    * @param color [interval[0, 1] * 4]
    */
-  public bufferColor(x: number, y: number, color: Color = DefaultColor) {
-    const indexX = math.number(math.evaluate(`floor(((${x} + 1) / 2) * ${this.fragmentBuffer.width})`));
-    const indexY = math.number(math.evaluate(`floor(((${-y} + 1) / 2) * ${this.fragmentBuffer.height})`));
+  public bufferColor(indexX: number, indexY: number, color: Color = DefaultColor) {
     const at = (indexY * this.fragmentBuffer.width + indexX) * 4;
-    console.log(indexX, indexY, at);
     this.fragmentBuffer.bufferColor(at, this.colorToUint8ClampedArray(color));
   }
   /**
