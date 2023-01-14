@@ -47,7 +47,8 @@ export default function HomePage() {
         params.varying.v_Color = params.attribute.a_Color;
       },
       (gl, params) => {
-        gl.FragColor = params.uniform.u_FragColor as Vec4;
+        console.log('params.varying', params.varying.v_Color);
+        gl.FragColor = params.varying.v_Color || params.uniform.u_FragColor;
       }
     );
     if (!context.program) {
@@ -56,22 +57,20 @@ export default function HomePage() {
 
     const vertexBuffer = context.createBuffer();
     const vertices = [
-      [0.0, 0.5, 0, 0, 1],
-      [-0.5, 0.0, 0, 0, 1],
-      [0.0, -0.5, 0, 0, 1],
-      [0.0, 0.5, 0, 0, 1],
-      [0.0, -0.5, 0, 0, 1],
-      [0.5, 0, 0, 0, 1],
+      [0.0, 0.5, 1, 0, 1, 1],
+      [-0.5, 0.0, 1, 1, 1, 1],
+      [0.0, -0.5, 0, 1, 1, 1],
+      [0.0, 0.5, 1, 0, 1, 1],
+      [0.0, -0.5, 1, 1, 1, 1],
+      [0.5, 0, 1, 0, 0, 1],
     ];
     context.bindBuffer(context.ARRAY_BUFFER, vertexBuffer);
     context.bufferData(context.ARRAY_BUFFER, new Float32Array(([] as number[]).concat(...vertices)));
-    context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Position'), 2, false, 5, 0);
+    context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Position'), 2, false, 6, 0);
 
-    context.bindBuffer(context.ARRAY_BUFFER, vertexBuffer);
-    context.bufferData(context.ARRAY_BUFFER, new Float32Array(([] as number[]).concat(...vertices)));
-    context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Color'), 3, false, 5, 2);
+    context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Color'), 4, false, 6, 2);
 
-    context.uniform4f(context.getUniformLocation(context.program, 'u_FragColor'), 0, 0, 1, 1);
+    // context.uniform4f(context.getUniformLocation(context.program, 'u_FragColor'), 0, 0, 1, 1);
 
     context.claerColor(0.0, 1.0, 0.0, 1.0);
     context.clear(context.COLOR_BUFFER_BIT);

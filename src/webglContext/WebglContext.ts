@@ -56,6 +56,25 @@ function isInTriangle(p1: ShaderPosition, p2: ShaderPosition, p3: ShaderPosition
   return pointInTriangle(o[0], o[1], p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
 }
 
+function interpolationTriangle(o: ShaderPosition, p1: ShaderPosition, p2: ShaderPosition, p3: ShaderPosition) {
+  const [ox, oy] = o;
+  const [p1x, p1y] = p1;
+  const [p2x, p2y] = p2;
+  const [p3x, p3y] = p3;
+  const b = math.number(
+    math.evaluate(
+      `((${ox} - ${p1x}) * (${p3y} - ${p1y}) - (${p3x} - ${p1x}) * (${oy} - ${p1y})) / ((${p2x} - ${p1x}) * (${p3y} - ${p1y}) - (${p3x} - ${p1x}) * (${p2y} - ${p1y}))`
+    )
+  );
+  const c = math.number(
+    math.evaluate(
+      `((${ox} - ${p1x}) * (${p2y} - ${p1y}) - (${p2x} - ${p1x}) * (${oy} - ${p1y})) / ((${p3x} - ${p1x}) * (${p2y} - ${p1y}) - (${p2x} - ${p1x}) * (${p3y} - ${p1y}))`
+    )
+  );
+  const a = math.number(math.evaluate(`1 - ${b} - ${c}`));
+  return [a, b, c];
+}
+
 export class WebglContext {
   private fragmentBuffer: FragmentBufferProxy;
   public get COLOR_BUFFER_BIT() {
@@ -174,7 +193,7 @@ export class WebglContext {
 
     this.vertexShaderResults = [];
     // 光栅化
-    this.rasterize();
+    this.rasterize(mode);
 
     this.rasterGroup = [];
     // 渲染
@@ -221,12 +240,42 @@ export class WebglContext {
     }
   }
   // 光栅化
-  private rasterize() {
+  private rasterize(mode: DrawArraysMode) {
     this.rasterGroup.forEach((chunk) => {
-      chunk.forEach((payload) => {
-        this.currentProgram?.execFragmentShader(payload);
-        this.drawFragment(payload);
-      });
+      if (mode === DrawArraysMode.TRIANGLES) {
+        const vertex = chunk.slice(0, 3);
+        const remaining = chunk.slice(3);
+        vertex.forEach((payload) => {
+          this.currentProgram?.execFragmentShader(payload);
+          this.drawFragment(payload);
+        });
+        const varyings = {
+          keys: Object.keys(vertex[0].__varying || {}),
+          values: vertex.map((ver) => ver.__varying),
+        };
+        remaining.forEach((payload) => {
+          const inter = interpolationTriangle(
+            payload.zoomPosition,
+            vertex[0].zoomPosition,
+            vertex[1].zoomPosition,
+            vertex[2].zoomPosition
+          );
+          const varying = {} as ShaderExecutorPayload['__varying'];
+          varyings.keys.forEach((key) => {
+            const values = varyings.values.map((temp) => temp?.[key]) as Float32Array[];
+            varying &&
+              (varying[key] = new Float32Array([
+                values[0][0] * inter[0] + values[1][0] * inter[1] + values[2][0] * inter[2],
+                values[0][1] * inter[0] + values[1][1] * inter[1] + values[2][1] * inter[2],
+                values[0][2] * inter[0] + values[1][2] * inter[1] + values[2][2] * inter[2],
+                values[0][3] * inter[0] + values[1][3] * inter[1] + values[2][3] * inter[2],
+              ]));
+          });
+          console.log(varying);
+          this.currentProgram?.execFragmentShader(payload, varying);
+          this.drawFragment(payload);
+        });
+      }
     });
   }
   private drawFragment(payload: ShaderExecutorPayload) {

@@ -6,7 +6,11 @@ export type Vec4 = Vec;
 export type Pigment = number;
 export type Color = Vec4;
 export type ShaderPosition = Vec4;
-export type VertexShaderExecutorPayload = { Position?: ShaderPosition; PointSize?: number };
+export type VertexShaderExecutorPayload = {
+  Position?: ShaderPosition;
+  PointSize?: number;
+  __varying?: { [key: string]: Vec };
+};
 export type VertexShaderExecutorParams = {
   attribute: { [key: string]: Vec };
   uniform: { [key: string]: Vec };

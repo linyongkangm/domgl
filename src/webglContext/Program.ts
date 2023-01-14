@@ -36,21 +36,30 @@ export class Program {
         this.vertexParams.attribute[key] = data;
       }
     });
-    this.vertexShader?.executor?.(payload, this.vertexParams);
+    this.vertexShader?.executor?.(payload, {
+      ...this.vertexParams,
+      varying: payload.__varying as any,
+    });
     if (payload.Position) {
       return payload;
     }
   }
-  public execFragmentShader(payload: VertexShaderExecutorPayload & FragmentShaderExecutorPayload) {
-    this?.fragmentShader?.executor?.(payload, this.fragmentParams);
+  public execFragmentShader(
+    payload: VertexShaderExecutorPayload & FragmentShaderExecutorPayload,
+    varying?: FragmentShaderExecutorParams['varying']
+  ) {
+    this?.fragmentShader?.executor?.(payload, {
+      ...this.fragmentParams,
+      varying: varying || payload.__varying || {},
+    });
     return payload;
   }
 
   private vertexParams: VertexShaderExecutorParams & { bindAttribLocation: { [name: string]: AttribLocation } } = {
     attribute: {},
     uniform: {},
-    varying: {},
     bindAttribLocation: {},
+    varying: {},
   };
   private fragmentParams: FragmentShaderExecutorParams = {
     uniform: this.vertexParams.uniform,

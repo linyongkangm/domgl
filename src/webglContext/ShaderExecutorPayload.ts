@@ -1,9 +1,10 @@
-import { VertexShaderExecutorPayload, FragmentShaderExecutorPayload, ShaderPosition, Color } from './interface';
+import { VertexShaderExecutorPayload, FragmentShaderExecutorPayload, ShaderPosition, Color, Vec } from './interface';
 import { math } from './utils/math';
 
 export class ShaderExecutorPayload implements VertexShaderExecutorPayload, FragmentShaderExecutorPayload {
   PointSize = 1;
   FragColor?: Color;
+  __varying?: { [key: string]: Vec } = {};
   private width: number;
   private height: number;
   constructor(width: number, height: number) {
