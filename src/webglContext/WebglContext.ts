@@ -9,13 +9,11 @@ import {
   VertexShaderExecutor,
   FragmentShaderExecutor,
   BufferTarget,
-  VertexShaderExecutorPayload,
-  FragmentShaderExecutorPayload,
 } from './interface';
 import { Program } from './Program';
 import { FragmentShader, Shader, VertexShader } from './Shader';
 import { ShaderExecutorPayload } from './ShaderExecutorPayload';
-
+import { math } from './utils/math';
 function group<T>(arr: T[], num: number): T[][] {
   const result: T[][] = [];
   for (let i = 0, len = arr.length; i < len; i += num) {
@@ -43,11 +41,10 @@ function pointInTriangle(
   x3: number,
   y3: number
 ) {
-  var pisor = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-  var a = ((y2 - y3) * (x0 - x3) + (x3 - x2) * (y0 - y3)) / pisor;
-  var b = ((y3 - y1) * (x0 - x3) + (x1 - x3) * (y0 - y3)) / pisor;
-  var c = 1 - a - b;
-
+  const pisor = math.evaluate(`(${y2} - ${y3}) * (${x1} - ${x3}) + (${x3} - ${x2}) * (${y1} - ${y3})`);
+  const a = math.evaluate(`((${y2} - ${y3}) * (${x0} - ${x3}) + (${x3} - ${x2}) * (${y0} - ${y3}))  / ${pisor}`);
+  const b = math.evaluate(`((${y3} - ${y1}) * (${x0} - ${x3}) + (${x1} - ${x3}) * (${y0} - ${y3}))  / ${pisor}`);
+  const c = math.evaluate(`1 - ${a} - ${b}`);
   return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
 }
 function product(p1: Point, p2: Point, p3: Point) {
@@ -204,14 +201,12 @@ export class WebglContext {
           const minY = Math.min(p1Position.y, p2Position.y, p3Position.y);
           const maxX = Math.max(p1Position.x, p2Position.x, p3Position.x);
           const maxY = Math.max(p1Position.y, p2Position.y, p3Position.y);
-          console.log(p1Position, p2Position, p3Position);
           for (let i = minX; i < maxX; i = i + 1) {
             for (let j = minY; j < maxY; j = j + 1) {
               const bol = isInTriangle(p1Position, p2Position, p3Position, {
                 x: i,
                 y: j,
               });
-              console.log(i, j, bol);
               if (bol) {
                 const payload = new ShaderExecutorPayload(this.canvas.width, this.canvas.height);
                 payload.setPositionFromZoomPosition({ x: i, y: j });
@@ -240,6 +235,7 @@ export class WebglContext {
 
     const color = payload?.FragColor;
     if (color) {
+      console.log(shaderPosition);
       this.fragmentBuffer.bufferColor(shaderPosition[0], shaderPosition[1], color);
     }
   }

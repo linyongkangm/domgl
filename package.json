@@ -1,6 +1,6 @@
 {
   "private": true,
-  "author":"linyongkangm <linyongkangm@foxmail.com>",
+  "author": "linyongkangm <linyongkangm@foxmail.com>",
   "scripts": {
     "dev": "umi dev",
     "build": "umi build",
@@ -9,6 +9,8 @@
     "start": "npm run dev"
   },
   "dependencies": {
+    "decimal.js": "^10.4.3",
+    "mathjs": "^11.5.0",
     "umi": "^4.0.41"
   },
   "devDependencies": {

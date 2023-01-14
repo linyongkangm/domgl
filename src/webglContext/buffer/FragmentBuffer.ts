@@ -1,4 +1,5 @@
 import { Color } from '../interface';
+import { math } from '../utils/math';
 
 const DefaultColor = new Float32Array([0, 0, 0, 1]);
 
@@ -63,9 +64,10 @@ export class FragmentBufferProxy {
    * @param color [interval[0, 1] * 4]
    */
   public bufferColor(x: number, y: number, color: Color = DefaultColor) {
-    const indexX = Math.min(Math.floor(((x + 1) / 2) * this.fragmentBuffer.width), this.fragmentBuffer.width - 1);
-    const indexY = Math.min(Math.floor(((-y + 1) / 2) * this.fragmentBuffer.height), this.fragmentBuffer.height - 1);
+    const indexX = math.number(math.evaluate(`floor(((${x} + 1) / 2) * ${this.fragmentBuffer.width})`));
+    const indexY = math.number(math.evaluate(`floor(((${-y} + 1) / 2) * ${this.fragmentBuffer.height})`));
     const at = (indexY * this.fragmentBuffer.width + indexX) * 4;
+    console.log(indexX, indexY, at);
     this.fragmentBuffer.bufferColor(at, this.colorToUint8ClampedArray(color));
   }
   /**

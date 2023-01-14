@@ -1,4 +1,5 @@
 import { VertexShaderExecutorPayload, FragmentShaderExecutorPayload, ShaderPosition, Color } from './interface';
+import { math } from './utils/math';
 
 export class ShaderExecutorPayload implements VertexShaderExecutorPayload, FragmentShaderExecutorPayload {
   PointSize = 1;
@@ -22,32 +23,11 @@ export class ShaderExecutorPayload implements VertexShaderExecutorPayload, Fragm
     }
   }
   public setPositionFromZoomPosition(zoomPosition: { x: number; y: number }) {
-    this.Position = new Float32Array([zoomPosition.x / (this.width / 2), zoomPosition.y / (this.height / 2), 0, 1]);
-  }
-  public get fragmentBufferIndex() {
-    const fragmentBufferPosition = this.fragmentBufferPosition;
-    if (fragmentBufferPosition) {
-      const at = (fragmentBufferPosition.y * this.width + fragmentBufferPosition.x) * 4;
-      return at;
-    }
-  }
-  // y轴反转了，适配canvas的坐标系
-  public get fragmentBufferPosition() {
-    if (this.Position) {
-      const [x, y] = this.Position;
-      const width = this.width;
-      const height = this.height;
-      const indexX = Math.min(Math.floor(((x + 1) / 2) * width), width - 1);
-      const indexY = Math.min(Math.floor(((-y + 1) / 2) * height), height - 1);
-      return { x: indexX, y: indexY };
-    }
-  }
-  public setPositionFromFragmentBufferPosition(fragmentBufferPosition: { x: number; y: number }) {
     this.Position = new Float32Array([
-      fragmentBufferPosition.x / this.width,
-      fragmentBufferPosition.y / this.height,
-      0,
-      1,
+      math.evaluate(`${zoomPosition.x} / (${this.width} / 2)`),
+      math.evaluate(`${zoomPosition.y} / (${this.height} / 2)`),
+      0.0,
+      1.0,
     ]);
   }
 }
