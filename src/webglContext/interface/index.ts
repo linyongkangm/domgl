@@ -7,10 +7,14 @@ export type Pigment = number;
 export type Color = Vec4;
 export type ShaderPosition = Vec4;
 export type VertexShaderExecutorPayload = { Position?: ShaderPosition; PointSize?: number };
-export type VertexShaderExecutorParams = { attribute: { [key: string]: Vec }; uniform: { [key: string]: Vec } };
+export type VertexShaderExecutorParams = {
+  attribute: { [key: string]: Vec };
+  uniform: { [key: string]: Vec };
+  varying: { [key: string]: Vec };
+};
 export type VertexShaderExecutor = (gl: VertexShaderExecutorPayload, params: VertexShaderExecutorParams) => void;
 export type FragmentShaderExecutorPayload = { FragColor?: Color };
-export type FragmentShaderExecutorParams = { uniform: { [key: string]: Vec } };
+export type FragmentShaderExecutorParams = { uniform: { [key: string]: Vec }; varying: { [key: string]: Vec } };
 export type FragmentShaderExecutor = (gl: FragmentShaderExecutorPayload, params: FragmentShaderExecutorParams) => void;
 export type ShaderExecutor = VertexShaderExecutor | FragmentShaderExecutor;
 export interface ICanvas {

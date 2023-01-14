@@ -44,7 +44,7 @@ export default function HomePage() {
       context,
       (gl, params) => {
         gl.Position = params.attribute.a_Position as Vec4;
-        console.log(params.attribute.a_Color);
+        params.varying.v_Color = params.attribute.a_Color;
       },
       (gl, params) => {
         gl.FragColor = params.uniform.u_FragColor as Vec4;

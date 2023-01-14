@@ -30,14 +30,13 @@ export class Program {
     }
   }
   public execvVertexShader(payload: VertexShaderExecutorPayload) {
-    const attribute: VertexShaderExecutorParams['attribute'] = {};
-    Object.entries(this.vertexParams.attribute).forEach(([key, location]) => {
+    Object.entries(this.vertexParams.bindAttribLocation).forEach(([key, location]) => {
       const data = location?.getCurrentData?.();
       if (data) {
-        attribute[key] = data;
+        this.vertexParams.attribute[key] = data;
       }
     });
-    this.vertexShader?.executor?.(payload, { attribute, uniform: this.vertexParams.uniform });
+    this.vertexShader?.executor?.(payload, this.vertexParams);
     if (payload.Position) {
       return payload;
     }
@@ -46,22 +45,25 @@ export class Program {
     this?.fragmentShader?.executor?.(payload, this.fragmentParams);
     return payload;
   }
-  private uniformParams: VertexShaderExecutorParams['uniform'] = {};
-  private vertexParams = {
-    attribute: {} as { [key: string]: AttribLocation },
-    uniform: this.uniformParams,
+
+  private vertexParams: VertexShaderExecutorParams & { bindAttribLocation: { [name: string]: AttribLocation } } = {
+    attribute: {},
+    uniform: {},
+    varying: {},
+    bindAttribLocation: {},
   };
   private fragmentParams: FragmentShaderExecutorParams = {
-    uniform: this.uniformParams,
+    uniform: this.vertexParams.uniform,
+    varying: {},
   };
   public getAttribLocation(name: string) {
     const location = new AttribLocation();
-    this.vertexParams.attribute[name] = location;
+    this.vertexParams.bindAttribLocation[name] = location;
     return location.setData.bind(location);
   }
   public getUniformLocation(name: string) {
     return (vec: Vec) => {
-      this.uniformParams[name] = vec;
+      this.vertexParams.uniform[name] = vec;
     };
   }
 }
