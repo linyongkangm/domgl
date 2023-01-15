@@ -56,12 +56,10 @@ export default function HomePage() {
 
     const vertexBuffer = context.createBuffer();
     const vertices = [
-      [0.0, 0.5, 1, 0],
-      [-0.5, 0.0, 1, 1],
-      [0.0, -0.5, 0, 1],
-      [0.0, 0.5, 1, 0],
-      [0.0, -0.5, 1, 1],
-      [0.5, 0, 1, 0],
+      [-0.5, 0.5, 1, 0],
+      [-0.5, -0.5, 1, 1],
+      [0.5, 0.5, 0, 1],
+      [0.5, -0.5, 0, 1],
     ];
     context.bindBuffer(context.ARRAY_BUFFER, vertexBuffer);
     context.bufferData(context.ARRAY_BUFFER, new Float32Array(([] as number[]).concat(...vertices)));
@@ -72,7 +70,7 @@ export default function HomePage() {
     context.claerColor(0.0, 1.0, 0.0, 1.0);
     context.clear(context.COLOR_BUFFER_BIT);
 
-    context.drawArrays(DrawArraysMode.TRIANGLES, 0, vertices.length);
+    context.drawArrays(DrawArraysMode.TRIANGLES_STRIP, 0, vertices.length);
   }, []);
   return <Stage ref={stageRef} width={30} height={30} style={{ width: 500, height: 500 }}></Stage>;
 }

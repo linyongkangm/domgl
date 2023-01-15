@@ -212,37 +212,49 @@ export class WebglContext {
   private assemble(mode: DrawArraysMode) {
     if (mode === DrawArraysMode.TRIANGLES) {
       this.rasterGroup = group(this.vertexShaderResults, 3);
-      this.rasterGroup.forEach((chunk) => {
-        const [p1, p2, p3] = chunk;
-        const p1Position = p1.zoomPosition;
-        const p2Position = p2.zoomPosition;
-        const p3Position = p3.zoomPosition;
-        if (p1Position && p2Position && p3Position) {
-          const minX = Math.min(p1Position[0], p2Position[0], p3Position[0]);
-          const minY = Math.min(p1Position[1], p2Position[1], p3Position[1]);
-          const maxX = Math.max(p1Position[0], p2Position[0], p3Position[0]);
-          const maxY = Math.max(p1Position[1], p2Position[1], p3Position[1]);
-          for (let i = minX; i < maxX; i = i + 1) {
-            for (let j = minY; j < maxY; j = j + 1) {
-              const o = new Float32Array([i, j, 0, 1]);
-              if (!(p1.sameZoomPosition(o) || p2.sameZoomPosition(o) || p3.sameZoomPosition(o))) {
-                const bol = isInTriangle(p1Position, p2Position, p3Position, o);
-                if (bol) {
-                  const payload = new ShaderExecutorPayload(this.canvas.width, this.canvas.height);
-                  payload.zoomPosition = o;
-                  chunk.push(payload);
-                }
+    } else if (mode === DrawArraysMode.TRIANGLES_STRIP) {
+      for (let i = 2; i < this.vertexShaderResults.length; i++) {
+        if (i % 2 === 0) {
+          this.rasterGroup.push(this.vertexShaderResults.slice(i - 2, i + 1));
+        } else {
+          this.rasterGroup.push([
+            this.vertexShaderResults[i - 1],
+            this.vertexShaderResults[i - 2],
+            this.vertexShaderResults[i],
+          ]);
+        }
+      }
+    }
+    this.rasterGroup.forEach((chunk) => {
+      const [p1, p2, p3] = chunk;
+      const p1Position = p1.zoomPosition;
+      const p2Position = p2.zoomPosition;
+      const p3Position = p3.zoomPosition;
+      if (p1Position && p2Position && p3Position) {
+        const minX = Math.min(p1Position[0], p2Position[0], p3Position[0]);
+        const minY = Math.min(p1Position[1], p2Position[1], p3Position[1]);
+        const maxX = Math.max(p1Position[0], p2Position[0], p3Position[0]);
+        const maxY = Math.max(p1Position[1], p2Position[1], p3Position[1]);
+        for (let i = minX; i <= maxX; i = i + 1) {
+          for (let j = minY; j <= maxY; j = j + 1) {
+            const o = new Float32Array([i, j, 0, 1]);
+            if (!(p1.sameZoomPosition(o) || p2.sameZoomPosition(o) || p3.sameZoomPosition(o))) {
+              const bol = isInTriangle(p1Position, p2Position, p3Position, o);
+              if (bol) {
+                const payload = new ShaderExecutorPayload(this.canvas.width, this.canvas.height);
+                payload.zoomPosition = o;
+                chunk.push(payload);
               }
             }
           }
         }
-      });
-    }
+      }
+    });
   }
   // 光栅化
   private rasterize(mode: DrawArraysMode) {
     this.rasterGroup.forEach((chunk) => {
-      if (mode === DrawArraysMode.TRIANGLES) {
+      if (mode === DrawArraysMode.TRIANGLES || mode === DrawArraysMode.TRIANGLES_STRIP) {
         const vertex = chunk.slice(0, 3);
         const remaining = chunk.slice(3);
         vertex.forEach((payload) => {
@@ -283,7 +295,6 @@ export class WebglContext {
     if (!shaderPosition) {
       return;
     }
-
     const color = payload?.FragColor;
     if (color) {
       this.fragmentBuffer.bufferColor(
