@@ -263,13 +263,14 @@ export class WebglContext {
           const varying = {} as ShaderExecutorPayload['__varying'];
           varyings.keys.forEach((key) => {
             const values = varyings.values.map((temp) => temp?.[key]) as Float32Array[];
-            varying &&
-              (varying[key] = new Float32Array([
-                values[0][0] * inter[0] + values[1][0] * inter[1] + values[2][0] * inter[2],
-                values[0][1] * inter[0] + values[1][1] * inter[1] + values[2][1] * inter[2],
-                values[0][2] * inter[0] + values[1][2] * inter[1] + values[2][2] * inter[2],
-                values[0][3] * inter[0] + values[1][3] * inter[1] + values[2][3] * inter[2],
-              ]));
+            const length = values[0].length;
+            // 各分量求插值
+            const tempArr = Array.from({ length }).map((_, index) => {
+              return values.reduce((prev, current, currentIndex) => {
+                return prev + current[index] * inter[currentIndex];
+              }, 0);
+            });
+            varying && (varying[key] = new Float32Array(tempArr));
           });
           this.currentProgram?.execFragmentShader(payload, varying);
           this.drawFragment(payload);

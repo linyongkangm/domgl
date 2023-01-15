@@ -56,23 +56,23 @@ export default function HomePage() {
 
     const vertexBuffer = context.createBuffer();
     const vertices = [
-      [0.0, 0.5, 1, 0, 1, 1],
-      [-0.5, 0.0, 1, 1, 1, 1],
-      [0.0, -0.5, 0, 1, 1, 1],
-      [0.0, 0.5, 1, 0, 1, 1],
-      [0.0, -0.5, 1, 1, 1, 1],
-      [0.5, 0, 1, 0, 0, 1],
+      [0.0, 0.5, 1, 0],
+      [-0.5, 0.0, 1, 1],
+      [0.0, -0.5, 0, 1],
+      [0.0, 0.5, 1, 0],
+      [0.0, -0.5, 1, 1],
+      [0.5, 0, 1, 0],
     ];
     context.bindBuffer(context.ARRAY_BUFFER, vertexBuffer);
     context.bufferData(context.ARRAY_BUFFER, new Float32Array(([] as number[]).concat(...vertices)));
-    context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Position'), 2, false, 6, 0);
+    context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Position'), 2, false, 4, 0);
 
-    context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Color'), 4, false, 6, 2);
+    context.vertexAttribPointer(context.getAttribLocation(context.program, 'a_Color'), 2, false, 4, 2);
 
     context.claerColor(0.0, 1.0, 0.0, 1.0);
     context.clear(context.COLOR_BUFFER_BIT);
 
     context.drawArrays(DrawArraysMode.TRIANGLES, 0, vertices.length);
   }, []);
-  return <Stage ref={stageRef} width={500} height={500} style={{ width: 500, height: 500 }}></Stage>;
+  return <Stage ref={stageRef} width={30} height={30} style={{ width: 500, height: 500 }}></Stage>;
 }

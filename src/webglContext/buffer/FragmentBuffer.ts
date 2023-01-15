@@ -79,8 +79,9 @@ export class FragmentBufferProxy {
   }
   private colorToUint8ClampedArray(color: Color = DefaultColor) {
     return new Uint8ClampedArray(
-      color.map((item) => {
-        return Math.round(item * 255);
+      DefaultColor.map((item, index) => {
+        const col = color.at(index);
+        return Math.round((col !== undefined ? col : item) * 255);
       })
     );
   }
