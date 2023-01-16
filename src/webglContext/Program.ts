@@ -6,10 +6,9 @@ import {
   VertexShaderExecutorParams,
   Vec,
   FragmentShaderExecutorParams,
-  Color,
-  ShaderPosition,
 } from './interface';
 import { Shader, VertexShader, FragmentShader } from './Shader';
+import { TextureTargetProxy } from './Texture';
 
 export class Program {
   private vertexShader?: VertexShader;
@@ -71,7 +70,7 @@ export class Program {
     return location.setData.bind(location);
   }
   public getUniformLocation(name: string) {
-    return (vec: Vec) => {
+    return (vec: Vec | TextureTargetProxy) => {
       this.vertexParams.uniform[name] = vec;
     };
   }

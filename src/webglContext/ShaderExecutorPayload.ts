@@ -1,4 +1,5 @@
 import { VertexShaderExecutorPayload, FragmentShaderExecutorPayload, ShaderPosition, Color, Vec } from './interface';
+import { TextureTargetProxy } from './Texture';
 import { math } from './utils/math';
 
 export class ShaderExecutorPayload implements VertexShaderExecutorPayload, FragmentShaderExecutorPayload {
@@ -42,5 +43,12 @@ export class ShaderExecutorPayload implements VertexShaderExecutorPayload, Fragm
   }
   public sameZoomPosition(zoomPosition: ShaderPosition) {
     return this.zoomPosition[0] === zoomPosition[0] && this.zoomPosition[1] === zoomPosition[1];
+  }
+  public texture2D(texture: TextureTargetProxy, coord: Float32Array): Float32Array {
+    const color = texture.getColorByCoord(coord);
+    if (color) {
+      return color;
+    }
+    return new Float32Array([0, 0, 0, 1]);
   }
 }

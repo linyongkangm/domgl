@@ -10,11 +10,18 @@ import {
   FragmentShaderExecutor,
   BufferTarget,
   ShaderPosition,
+  TextureUnit,
+  TextureTarget,
+  TexturePname,
+  TextureParam,
+  TextureType,
+  TextureFormat,
 } from './interface';
 import { Program } from './Program';
 import { FragmentShader, Shader, VertexShader } from './Shader';
 import { ShaderExecutorPayload } from './ShaderExecutorPayload';
 import { math } from './utils/math';
+import { Texture, TextureTargetProxy } from './Texture';
 function group<T>(arr: T[], num: number): T[][] {
   const result: T[][] = [];
   for (let i = 0, len = arr.length; i < len; i += num) {
@@ -184,6 +191,67 @@ export class WebglContext {
     d: number
   ) {
     location(new Float32Array([a, b, c, d]));
+  }
+  public uniformli(location: ReturnType<WebglContext['getUniformLocation']>, unit: TextureUnit) {
+    const texTarget = this.textureUnitMap.get(unit);
+    if (texTarget) {
+      location(texTarget);
+    }
+  }
+  public pixelStorei() {}
+  public createTexture() {
+    return new Texture();
+  }
+  private currentActiveTextureUnit?: TextureUnit;
+  private textureUnitMap = new Map<TextureUnit, TextureTargetProxy>();
+  private get currentActiveTextureProxy() {
+    return this.currentActiveTextureUnit !== undefined && this.textureUnitMap.get(this.currentActiveTextureUnit);
+  }
+  public get TEXTURE0() {
+    return TextureUnit.TEXTURE0;
+  }
+  public get TEXTURE1() {
+    return TextureUnit.TEXTURE1;
+  }
+  public get TEXTURE_2D() {
+    return TextureTarget.TEXTURE_2D;
+  }
+  public get TEXTURE_MIN_FILTER() {
+    return TexturePname.TEXTURE_MIN_FILTER;
+  }
+  public get LINEAR() {
+    return TextureParam.LINEAR;
+  }
+  public get RGB() {
+    return TextureFormat.RGB;
+  }
+  public get UNSIGNED_BYTE() {
+    return TextureType.UNSIGNED_BYTE;
+  }
+  public activeTexture(unit: TextureUnit) {
+    this.currentActiveTextureUnit = unit;
+  }
+  public bindTexture(target: TextureTarget, texture: Texture) {
+    if (this.currentActiveTextureUnit !== undefined) {
+      this.textureUnitMap.set(this.currentActiveTextureUnit, new TextureTargetProxy(target, texture));
+    }
+  }
+  public texParameteri(target: TextureTarget, pname: TexturePname, params: TextureParam) {
+    if (this.currentActiveTextureProxy && this.currentActiveTextureProxy.getTarget() === target) {
+      this.currentActiveTextureProxy.texParameteri(pname, params);
+    }
+  }
+  public texImage2D(
+    target: TextureTarget,
+    level: number,
+    internalformat: TextureFormat,
+    format: TextureFormat,
+    type: TextureType,
+    image: HTMLImageElement
+  ) {
+    if (this.currentActiveTextureProxy && this.currentActiveTextureProxy.getTarget() === target) {
+      this.currentActiveTextureProxy.texImage2D(image);
+    }
   }
   public drawArrays(mode: DrawArraysMode, first: number, count: number) {
     // 绘制顶点
