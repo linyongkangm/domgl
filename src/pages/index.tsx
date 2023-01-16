@@ -90,5 +90,5 @@ export default function HomePage() {
       context.drawArrays(DrawArraysMode.TRIANGLES_STRIP, 0, vertices.length);
     })();
   }, []);
-  return <Stage ref={stageRef} width={10} height={10} style={{ width: 500, height: 500 }}></Stage>;
+  return <Stage ref={stageRef} width={30} height={30} style={{ width: 500, height: 500 }}></Stage>;
 }

@@ -3,6 +3,7 @@ import { math } from './utils/math';
 
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
+document.body.append(canvas);
 export class Texture {
   private imageData?: ImageData;
   public updateImage(image: HTMLImageElement) {
@@ -16,7 +17,7 @@ export class Texture {
       const [x, y] = coord;
       const { width, height } = this.imageData;
       const start = math.number(
-        math.evaluate(`(floor(${y} * ${height - 1}) * ${height} + floor(${x} * ${width - 1})) * 4`)
+        math.evaluate(`(floor(${y} * ${height - 1}) * ${width} + floor(${x} * ${width - 1})) * 4`)
       );
       const end = start + 4;
       return this.imageData.data.slice(start, end);
